@@ -1,0 +1,12 @@
+#!/bin/sh
+set +e
+rm -rf .coverage
+SCRIPT=$(readlink -f "$0")
+SCRIPTPATH=$(dirname "$SCRIPT")
+MIN_PERCENTAGE=100
+echo "Working directory: $SCRIPTPATH"
+export PYTHONPATH="$SCRIPTPATH:$PYTHONPATH"
+coverage3 run -m nose --cover-package=aorta -w tests -x $@ && \
+coverage3 report --include=aorta/* \
+    --omit "./tests/*" \
+    --fail-under $MIN_PERCENTAGE -m

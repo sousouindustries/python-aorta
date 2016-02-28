@@ -1,0 +1,4 @@
+
+
+class MalformedEvent(Exception):
+    pass
