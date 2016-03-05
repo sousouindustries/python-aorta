@@ -95,7 +95,7 @@ class Sender(MessagingHandler, threading.Thread, ISender):
         with self.lock:
             msg, event = self.events.pop(tag, [None, threading.Event()])
         if msg is None:
-            return        
+            return
 
         log_msg = "Message (id: {0}, delivery: {1}) accepted by {2}"\
             .format(msg.id, tag, self.dsn)
