@@ -9,4 +9,5 @@ export PYTHONPATH="$SCRIPTPATH:$PYTHONPATH"
 coverage3 run -m nose --cover-package=aorta -w tests -x $@ && \
 coverage3 report --include=aorta/* \
     --omit "./tests/*" \
+    --omit "./aorta/const.py"\
     --fail-under $MIN_PERCENTAGE -m
