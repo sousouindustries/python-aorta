@@ -12,6 +12,8 @@ EXC_NOTIMPLEMENTED = NotImplementedError("Subclasses must override this method."
 class BaseMessagingBackend:
     """The base class for all messaging backends."""
     sender_class = None
+    receiver_class = None
+    logger = logging.getLogger('aorta')
 
     @property
     def senders(self):
@@ -38,6 +40,7 @@ class BaseMessagingBackend:
         self.__incoming = queue.Queue()
         self.__stopped = False
         self.__thread = threading.Thread(target=self.__main__, daemon=True)
+        self.__opts = {}
 
     def start(self):
         self.__thread.start()
@@ -72,11 +75,11 @@ class BaseMessagingBackend:
         with self.__lock:
             if dsn not in self.__receivers:
                 self.__receivers[dsn] = self\
-                    .create_receiver(host, port, channel, options=options)
+                    ._create_receiver(host, port, channel, options=options)
             receiver = self.__receivers[dsn]
         return receiver
 
-    def create_receiver(self, host, port, channel, *args, **kwargs):
+    def _create_receiver(self, host, port, channel, *args, **kwargs):
         return self.receiver_class\
             .create(self, host, port, channel, *args, **kwargs)
 
@@ -109,16 +112,26 @@ class BaseMessagingBackend:
         if self.__thread.is_alive():
             self.__thread.join()
 
-    def dispatch(self, receiver_id, message):
+    def dispatch(self, receiver, message):
         """Dispatches a message to the appropriate listener."""
-        pass
+        try:
+            with self.__lock:
+                listener = self.listeners.get(receiver.receiver_id)
+            if listener is None:
+                self.logger.warning(
+                    "Orphaned receiver (id: {0})".format(receiver.receiver_id))
+                return
+
+            listener.dispatch(message)
+        except Exception:
+            self.logger.exception("Caught fatal exception")
 
     def __main__(self):
         while True:
             try:
-                receiver_id, msg = self.__incoming.get(True, 0.1)
+                receiver, msg = self.__incoming.get(True, 0.1)
             except queue.Empty:
                 if self.__stopped:
                     break
             else:
-                self.dispatch(receiver_id, msg)
+                self.dispatch(receiver, msg)

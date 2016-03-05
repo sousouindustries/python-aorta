@@ -59,4 +59,4 @@ class Receiver(MessagingHandler, threading.Thread, IReceiver):
         log_msg = "Message (id: {0}, receiver: {1}) received from {2}"\
             .format(msg.id, self.receiver_id, self.dsn)
         self.logger.debug(log_msg)
-        self.backend.put(self.receiver_id, msg)
+        self.backend.put(self, msg)
