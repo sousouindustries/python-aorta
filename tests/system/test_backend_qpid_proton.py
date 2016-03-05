@@ -41,5 +41,10 @@ class AortaTestCase(unittest.TestCase):
         receiver_id, msg = self.backend.get()
         self.assertEqual(msg.body, "Hello world!")
 
+    def test_listener(self):
+        self.backend.start()
+        self.backend.listen(self.url)
+        self.backend.send_message(self.url, Message(body="Hello world!"), block=True)
+
 if __name__ == '__main__':
     unittest.main()

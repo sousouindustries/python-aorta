@@ -36,6 +36,11 @@ class BaseMessagingBackend:
         self.__lock = threading.RLock()
         self.__deliveries = 0
         self.__incoming = queue.Queue()
+        self.__stopped = False
+        self.__thread = threading.Thread(target=self.__main__, daemon=True)
+
+    def start(self):
+        self.__thread.start()
 
     def register_delivery(self):
         with self.__lock:
@@ -99,3 +104,21 @@ class BaseMessagingBackend:
         handlers = itertools.chain(self.senders.values(), self.receivers.values())
         for handler in handlers:
             handler.destroy()
+
+        self.__stopped = True
+        if self.__thread.is_alive():
+            self.__thread.join()
+
+    def dispatch(self, receiver_id, message):
+        """Dispatches a message to the appropriate listener."""
+        pass
+
+    def __main__(self):
+        while True:
+            try:
+                receiver_id, msg = self.__incoming.get(True, 0.1)
+            except queue.Empty:
+                if self.__stopped:
+                    break
+            else:
+                self.dispatch(receiver_id, msg)
