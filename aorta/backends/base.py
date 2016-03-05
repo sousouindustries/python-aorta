@@ -70,4 +70,5 @@ class BaseMessagingBackend:
         return sender.send(message, blocking=block, timeout=timeout)
 
     def destroy(self):
-        raise EXC_NOTIMPLEMENTED
+        for sender in self.senders.values():
+            sender.destroy()

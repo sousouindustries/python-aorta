@@ -16,10 +16,6 @@ class MessagingBackend(BaseMessagingBackend):
     def create_sender(self, host, port, channel, *args, **kwargs):
         return Sender.create(self, host, port, channel)
 
-    def destroy(self):
-        for sender in self.senders.values():
-            sender.destroy()
-
 
 class Sender(MessagingHandler, threading.Thread, ISender):
 
