@@ -10,10 +10,10 @@ from aorta.const import PORT
 from aorta.message import Message
 import aorta.backends
 
-#logger = logging.getLogger()
-#logger.level = logging.DEBUG
-#stream_handler = logging.StreamHandler(sys.stdout)
-#logger.addHandler(stream_handler)
+logger = logging.getLogger()
+logger.level = logging.DEBUG
+stream_handler = logging.StreamHandler(sys.stdout)
+logger.addHandler(stream_handler)
 PROTON_INSTALLED = hasattr(aorta.backends, 'qpid_proton')
 
 
@@ -34,6 +34,12 @@ class AortaTestCase(unittest.TestCase):
         self.backend.send_message(self.url, Message(body="Hello world!"), block=True)
         self.backend.send_message(self.url, Message(body="Hello world!"), block=True)
         self.assertEqual(self.backend.deliveries, 4)
+
+    def test_recv(self):
+        self.backend.listen(self.url)
+        self.backend.send_message(self.url, Message(body="Hello world!"))
+        receiver_id, msg = self.backend.get()
+        self.assertEqual(msg.body, "Hello world!")
 
 if __name__ == '__main__':
     unittest.main()
