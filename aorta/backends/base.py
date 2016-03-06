@@ -45,12 +45,30 @@ class BaseMessagingBackend:
     def start(self):
         self.__thread.start()
 
+    def is_running(self):
+        """Return a boolean indicating if the backend is running and
+        processing messages.
+        """
+        return self.__thread.is_alive()
+
     def register_delivery(self):
         with self.__lock:
             self.__deliveries += 1
 
     def generate_message_id(self):
         return uuid.uuid4().hex
+
+    def add_listener(self, listener):
+        """Adds a new listener to the backend and include it in the
+        message processing event loop.
+        """
+        listener.setup(self.listen)
+        with self.__lock:
+            if listener.receiver_id in self.listeners:
+                # TODO: Handle the creation of duplicate listeners.
+                pass
+
+            self.__listeners[listener.receiver_id] = listener
 
     def get(self):
         """Return the latest message in the queue."""
@@ -76,6 +94,10 @@ class BaseMessagingBackend:
             if dsn not in self.__receivers:
                 self.__receivers[dsn] = self\
                     ._create_receiver(host, port, channel, options=options)
+            else:
+                # TODO: Multiple calls to listen() for the same DSN are assumed
+                # to be reconfiguring the connection options.
+                pass
             receiver = self.__receivers[dsn]
         return receiver
 
